@@ -13,8 +13,12 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  title: 'Photon Transport Demo',
+  title: 'Light Attenuation Demo | PhotonLab',
   description: 'Interactive Monte Carlo simulation of light absorption and scattering in tissue.',
+  icons: {
+    icon: '/icon.svg',
+    apple: '/icon.svg',
+  },
 };
 
 export default function RootLayout({ children }: LayoutProps<'/'>) {
