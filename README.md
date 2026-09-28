@@ -1,4 +1,4 @@
-# PhotonLab
+# opticsdemos
 
 Educational optics simulations for learning about light-tissue interactions.
 
@@ -54,7 +54,7 @@ npx vercel
 
 ## Future
 
-PhotonLab is designed to grow into a hub of educational optics demos. This is the first simulation.
+opticsdemos is designed to grow into a hub of educational optics simulations. This is the first demo.
 
 ## License
 

@@ -13,9 +13,9 @@ const OpticsScene = dynamic(
   { ssr: false }
 );
 
-function PhotonLabLogo() {
+function OpticsLogo() {
   return (
-    <svg viewBox="0 0 32 32" className="w-6 h-6" fill="none">
+    <svg viewBox="0 0 32 32" className="w-5 h-5" fill="none">
       <rect width="32" height="32" rx="6" fill="#f1f5f9"/>
       <circle cx="16" cy="10" r="4" fill="#fbbf24"/>
       <circle cx="16" cy="10" r="2.5" fill="#fcd34d"/>
@@ -49,9 +49,9 @@ export default function Home() {
 
       <div className="absolute top-3 left-3 flex items-center gap-3">
         <div className="flex items-center gap-2 bg-white/90 backdrop-blur-sm px-2.5 py-1.5 rounded-lg shadow-sm border border-gray-200">
-          <PhotonLabLogo />
+          <OpticsLogo />
           <div className="flex flex-col">
-            <span className="text-[10px] text-gray-400 font-medium tracking-wide">PHOTONLAB</span>
+            <span className="text-[10px] text-gray-400 font-medium tracking-wide">opticsdemos</span>
             <span className="text-xs font-medium text-gray-700 -mt-0.5">Light Attenuation</span>
           </div>
         </div>
