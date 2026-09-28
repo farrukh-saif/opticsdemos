@@ -6,6 +6,7 @@ export interface SimulationParams {
   photonRate: number; // photons per second
   thickness: number; // tissue thickness (mm)
   anisotropy: number; // g factor (-1 to 1)
+  beamRadius: number; // beam radius (mm)
 }
 
 export interface PhotonPath {
@@ -26,9 +27,10 @@ export interface SimulationStats {
 export type ViewMode = '3d' | '2d';
 
 export const DEFAULT_PARAMS: SimulationParams = {
-  absorptionCoef: 0.1, // typical tissue value
-  scatteringCoef: 10, // typical tissue value
-  photonRate: 50,
-  thickness: 10, // 10mm slab
-  anisotropy: 0.9, // forward-scattering like tissue
+  absorptionCoef: 0.02,
+  scatteringCoef: 8,
+  photonRate: 40,
+  thickness: 5,
+  anisotropy: 0.85,
+  beamRadius: 2,
 };

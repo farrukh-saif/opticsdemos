@@ -1,41 +1,40 @@
 'use client';
 
-import { Suspense, useRef, useEffect } from 'react';
+import { Suspense, useEffect } from 'react';
 import { Canvas, useThree } from '@react-three/fiber';
-import { OrbitControls, PerspectiveCamera, OrthographicCamera, Grid, Text } from '@react-three/drei';
+import { OrbitControls, PerspectiveCamera, OrthographicCamera, Text } from '@react-three/drei';
 import * as THREE from 'three';
 import { TissueSlab } from './TissueSlab';
-import { PhotonPaths, LightSource } from './PhotonPaths';
+import { PhotonPaths, BeamSource, Detector } from './PhotonPaths';
 import { PhotonPath, ViewMode } from '@/types/optics';
 
 interface SceneContentProps {
   photons: PhotonPath[];
   thickness: number;
-  width: number;
-  height: number;
+  slabSize: number;
   absorptionCoef: number;
   scatteringCoef: number;
+  beamRadius: number;
   viewMode: ViewMode;
 }
 
 function CameraController({ viewMode }: { viewMode: ViewMode }) {
   const { camera, size } = useThree();
-  const controlsRef = useRef<typeof OrbitControls | null>(null);
 
   useEffect(() => {
     if (viewMode === '2d') {
-      camera.position.set(0, 0, 40);
+      camera.position.set(30, 0, 0);
       camera.lookAt(0, 0, 0);
       if (camera instanceof THREE.OrthographicCamera) {
         const aspect = size.width / size.height;
-        camera.left = -20 * aspect;
-        camera.right = 20 * aspect;
-        camera.top = 20;
-        camera.bottom = -20;
+        camera.left = -15 * aspect;
+        camera.right = 15 * aspect;
+        camera.top = 15;
+        camera.bottom = -15;
         camera.updateProjectionMatrix();
       }
     } else {
-      camera.position.set(20, 15, 25);
+      camera.position.set(18, 12, 18);
       camera.lookAt(0, 0, 0);
     }
   }, [viewMode, camera, size]);
@@ -46,88 +45,83 @@ function CameraController({ viewMode }: { viewMode: ViewMode }) {
 function SceneContent({
   photons,
   thickness,
-  width,
-  height,
+  slabSize,
   absorptionCoef,
   scatteringCoef,
+  beamRadius,
   viewMode,
 }: SceneContentProps) {
+  const airGap = 3;
+  const tissueTop = thickness / 2;
+  const tissueBottom = -thickness / 2;
+
   return (
     <>
       <CameraController viewMode={viewMode} />
 
       {viewMode === '3d' ? (
-        <PerspectiveCamera makeDefault position={[20, 15, 25]} fov={50} />
+        <PerspectiveCamera makeDefault position={[18, 12, 18]} fov={45} />
       ) : (
-        <OrthographicCamera makeDefault position={[0, 0, 40]} zoom={15} />
+        <OrthographicCamera makeDefault position={[30, 0, 0]} zoom={20} />
       )}
 
       <OrbitControls
         enableRotate={viewMode === '3d'}
         enablePan={true}
         enableZoom={true}
-        minDistance={10}
-        maxDistance={100}
+        minDistance={8}
+        maxDistance={60}
       />
 
-      <ambientLight intensity={0.4} />
-      <directionalLight position={[10, 10, 5]} intensity={0.8} />
-      <directionalLight position={[-10, -10, -5]} intensity={0.3} />
+      <ambientLight intensity={0.6} />
+      <directionalLight position={[5, 10, 5]} intensity={0.7} />
+      <directionalLight position={[-5, -5, -5]} intensity={0.2} />
 
       <TissueSlab
         thickness={thickness}
-        width={width}
-        height={height}
+        size={slabSize}
         absorptionCoef={absorptionCoef}
         scatteringCoef={scatteringCoef}
       />
 
       <PhotonPaths photons={photons} />
 
-      <LightSource thickness={thickness} />
+      <BeamSource 
+        position={[0, tissueTop + airGap, 0]} 
+        radius={beamRadius} 
+      />
 
-      {viewMode === '3d' && (
-        <Grid
-          args={[50, 50]}
-          position={[0, -height / 2 - 0.5, 0]}
-          cellSize={2}
-          cellThickness={0.5}
-          cellColor="#444"
-          sectionSize={10}
-          sectionThickness={1}
-          sectionColor="#666"
-          fadeDistance={50}
-          fadeStrength={1}
-        />
-      )}
+      <Detector 
+        position={[0, tissueBottom - 2, 0]} 
+        size={slabSize * 0.7} 
+      />
 
       <Text
-        position={[-thickness / 2 - 4, height / 2 + 1, 0]}
-        fontSize={1}
-        color="#ffff44"
+        position={[0, tissueTop + airGap + 1.5, 0]}
+        fontSize={0.6}
+        color="#666"
         anchorX="center"
+        anchorY="bottom"
       >
-        Light Source
+        Source
       </Text>
 
       <Text
-        position={[0, height / 2 + 1, 0]}
-        fontSize={1}
-        color="#ff8866"
-        anchorX="center"
+        position={[slabSize / 2 + 1, 0, 0]}
+        fontSize={0.5}
+        color="#888"
+        anchorX="left"
+        rotation={[0, 0, 0]}
       >
         Tissue
       </Text>
 
-      <mesh position={[thickness / 2 + 2, 0, 0]}>
-        <planeGeometry args={[0.1, height * 0.8]} />
-        <meshBasicMaterial color="#44ff44" transparent opacity={0.3} />
-      </mesh>
       <Text
-        position={[thickness / 2 + 4, height / 2 + 1, 0]}
-        fontSize={0.8}
-        color="#44ff44"
+        position={[0, tissueBottom - 3.5, 0]}
+        fontSize={0.6}
+        color="#666"
         anchorX="center"
+        anchorY="top"
       >
         Detector
       </Text>
@@ -138,33 +132,33 @@ function SceneContent({
 interface OpticsSceneProps {
   photons: PhotonPath[];
   thickness: number;
-  width: number;
-  height: number;
+  slabSize: number;
   absorptionCoef: number;
   scatteringCoef: number;
+  beamRadius: number;
   viewMode: ViewMode;
 }
 
 export function OpticsScene({
   photons,
   thickness,
-  width,
-  height,
+  slabSize,
   absorptionCoef,
   scatteringCoef,
+  beamRadius,
   viewMode,
 }: OpticsSceneProps) {
   return (
-    <div className="w-full h-full bg-gradient-to-b from-gray-900 to-black rounded-lg overflow-hidden">
+    <div className="w-full h-full bg-gradient-to-b from-slate-100 to-slate-200 overflow-hidden">
       <Canvas>
         <Suspense fallback={null}>
           <SceneContent
             photons={photons}
             thickness={thickness}
-            width={width}
-            height={height}
+            slabSize={slabSize}
             absorptionCoef={absorptionCoef}
             scatteringCoef={scatteringCoef}
+            beamRadius={beamRadius}
             viewMode={viewMode}
           />
         </Suspense>
