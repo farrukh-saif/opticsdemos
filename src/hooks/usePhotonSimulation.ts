@@ -4,11 +4,10 @@ import { useState, useCallback, useRef, useEffect } from 'react';
 import * as THREE from 'three';
 import { PhotonPath, SimulationParams, SimulationStats } from '@/types/optics';
 
-const STEP_SIZE = 0.1; // mm per step
+const STEP_SIZE = 0.1;
 const MAX_STEPS = 500;
-const MAX_PHOTONS = 200; // max visible photon paths for performance
-const SLAB_WIDTH = 20; // mm
-const SLAB_HEIGHT = 20; // mm
+const MAX_PHOTONS = 150;
+const SLAB_SIZE = 12; // tissue slab is a square
 
 function generateId(): string {
   return Math.random().toString(36).substring(2, 9);
@@ -36,10 +35,10 @@ function sampleScatterDirection(
   const perpX = new THREE.Vector3();
   const perpY = new THREE.Vector3();
 
-  if (Math.abs(currentDir.x) < 0.9) {
-    perpX.set(1, 0, 0);
-  } else {
+  if (Math.abs(currentDir.y) < 0.9) {
     perpX.set(0, 1, 0);
+  } else {
+    perpX.set(1, 0, 0);
   }
   perpX.crossVectors(currentDir, perpX).normalize();
   perpY.crossVectors(currentDir, perpX).normalize();
@@ -53,17 +52,29 @@ function sampleScatterDirection(
   return newDir.normalize();
 }
 
+function sampleBeamPosition(beamRadius: number): { x: number; z: number } {
+  const r = beamRadius * Math.sqrt(Math.random());
+  const theta = Math.random() * 2 * Math.PI;
+  return {
+    x: r * Math.cos(theta),
+    z: r * Math.sin(theta),
+  };
+}
+
 function simulatePhoton(params: SimulationParams): PhotonPath {
-  const { absorptionCoef, scatteringCoef, thickness, anisotropy } = params;
+  const { absorptionCoef, scatteringCoef, thickness, anisotropy, beamRadius } = params;
   const totalCoef = absorptionCoef + scatteringCoef;
   const albedo = scatteringCoef / totalCoef;
 
   const points: THREE.Vector3[] = [];
-  const startY = (Math.random() - 0.5) * SLAB_HEIGHT * 0.8;
-  const startZ = (Math.random() - 0.5) * SLAB_WIDTH * 0.8;
+  
+  const beamPos = sampleBeamPosition(beamRadius);
+  const tissueTop = thickness / 2;
+  const tissueBottom = -thickness / 2;
+  const airGap = 3;
 
-  let position = new THREE.Vector3(-thickness / 2 - 0.5, startY, startZ);
-  let direction = new THREE.Vector3(1, 0, 0);
+  let position = new THREE.Vector3(beamPos.x, tissueTop + airGap, beamPos.z);
+  let direction = new THREE.Vector3(0, -1, 0);
   let weight = 1.0;
   let status: PhotonPath['status'] = 'traveling';
 
@@ -76,25 +87,25 @@ function simulatePhoton(params: SimulationParams): PhotonPath {
     position = position.clone().add(direction.clone().multiplyScalar(stepLength));
     points.push(position.clone());
 
-    if (position.x > thickness / 2) {
+    if (position.y < tissueBottom) {
       status = 'transmitted';
       break;
     }
 
-    if (position.x < -thickness / 2 - 1) {
+    if (position.y > tissueTop + airGap + 1) {
       status = 'scattered-out';
       break;
     }
 
     if (
-      Math.abs(position.y) > SLAB_HEIGHT / 2 ||
-      Math.abs(position.z) > SLAB_WIDTH / 2
+      Math.abs(position.x) > SLAB_SIZE / 2 ||
+      Math.abs(position.z) > SLAB_SIZE / 2
     ) {
       status = 'scattered-out';
       break;
     }
 
-    if (position.x >= -thickness / 2 && position.x <= thickness / 2) {
+    if (position.y <= tissueTop && position.y >= tissueBottom) {
       const survivalProb = albedo;
       if (Math.random() > survivalProb) {
         status = 'absorbed';
@@ -189,7 +200,7 @@ export function usePhotonSimulation(params: SimulationParams) {
 
   useEffect(() => {
     reset();
-  }, [params.absorptionCoef, params.scatteringCoef, params.thickness, params.anisotropy, reset]);
+  }, [params.absorptionCoef, params.scatteringCoef, params.thickness, params.anisotropy, params.beamRadius, reset]);
 
   return {
     photons,
@@ -198,8 +209,8 @@ export function usePhotonSimulation(params: SimulationParams) {
     toggleRunning,
     reset,
     slabDimensions: {
-      width: SLAB_WIDTH,
-      height: SLAB_HEIGHT,
+      width: SLAB_SIZE,
+      height: SLAB_SIZE,
       thickness: params.thickness,
     },
   };

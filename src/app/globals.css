@@ -1,8 +1,8 @@
 @import "tailwindcss";
 
 :root {
-  --background: #111827;
-  --foreground: #f9fafb;
+  --background: #f1f5f9;
+  --foreground: #1e293b;
 }
 
 @theme inline {
@@ -15,7 +15,7 @@
 body {
   background: var(--background);
   color: var(--foreground);
-  font-family: var(--font-sans), Arial, Helvetica, sans-serif;
+  font-family: var(--font-sans), system-ui, sans-serif;
 }
 
 input[type="range"] {
@@ -26,57 +26,45 @@ input[type="range"] {
 }
 
 input[type="range"]::-webkit-slider-runnable-track {
-  background: #374151;
-  height: 6px;
-  border-radius: 3px;
+  background: #e2e8f0;
+  height: 4px;
+  border-radius: 2px;
 }
 
 input[type="range"]::-webkit-slider-thumb {
   -webkit-appearance: none;
   appearance: none;
-  background: #3b82f6;
-  height: 16px;
-  width: 16px;
+  background: #64748b;
+  height: 12px;
+  width: 12px;
   border-radius: 50%;
-  margin-top: -5px;
-  transition: background 0.15s ease;
+  margin-top: -4px;
+  transition: background 0.1s ease;
 }
 
 input[type="range"]::-webkit-slider-thumb:hover {
-  background: #60a5fa;
+  background: #475569;
 }
 
 input[type="range"]::-moz-range-track {
-  background: #374151;
-  height: 6px;
-  border-radius: 3px;
+  background: #e2e8f0;
+  height: 4px;
+  border-radius: 2px;
 }
 
 input[type="range"]::-moz-range-thumb {
-  background: #3b82f6;
-  height: 16px;
-  width: 16px;
+  background: #64748b;
+  height: 12px;
+  width: 12px;
   border-radius: 50%;
   border: none;
-  transition: background 0.15s ease;
+  transition: background 0.1s ease;
 }
 
 input[type="range"]::-moz-range-thumb:hover {
-  background: #60a5fa;
+  background: #475569;
 }
 
 canvas {
   touch-action: none;
-}
-
-@media (max-width: 640px) {
-  .control-panel-mobile {
-    position: fixed;
-    bottom: 0;
-    left: 0;
-    right: 0;
-    max-height: 50vh;
-    overflow-y: auto;
-    border-radius: 1rem 1rem 0 0;
-  }
 }

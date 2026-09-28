@@ -4,31 +4,24 @@ import { SimulationParams, SimulationStats, ViewMode } from '@/types/optics';
 
 interface SliderProps {
   label: string;
+  symbol?: string;
   value: number;
   min: number;
   max: number;
   step: number;
-  unit: string;
+  unit?: string;
   onChange: (value: number) => void;
-  description?: string;
 }
 
-function Slider({
-  label,
-  value,
-  min,
-  max,
-  step,
-  unit,
-  onChange,
-  description,
-}: SliderProps) {
+function Slider({ label, symbol, value, min, max, step, unit, onChange }: SliderProps) {
   return (
-    <div className="space-y-1">
-      <div className="flex justify-between items-center">
-        <label className="text-sm font-medium text-gray-200">{label}</label>
-        <span className="text-sm font-mono text-blue-400">
-          {value.toFixed(step < 1 ? 2 : 0)} {unit}
+    <div className="space-y-0.5">
+      <div className="flex justify-between items-center text-xs">
+        <span className="text-gray-600">
+          {symbol ? <span className="font-mono">{symbol}</span> : label}
+        </span>
+        <span className="font-mono text-gray-800">
+          {value.toFixed(step < 1 ? (step < 0.1 ? 2 : 1) : 0)}{unit && ` ${unit}`}
         </span>
       </div>
       <input
@@ -38,11 +31,8 @@ function Slider({
         step={step}
         value={value}
         onChange={(e) => onChange(parseFloat(e.target.value))}
-        className="w-full h-2 bg-gray-700 rounded-lg appearance-none cursor-pointer accent-blue-500"
+        className="w-full h-1.5 rounded-full cursor-pointer"
       />
-      {description && (
-        <p className="text-xs text-gray-400">{description}</p>
-      )}
     </div>
   );
 }
@@ -75,131 +65,108 @@ export function ControlPanel({
     setParams({ ...params, [key]: value });
   };
 
-  const transmissionPercent = stats.total > 0 
-    ? ((stats.transmitted / stats.total) * 100).toFixed(1)
-    : '0.0';
-  const absorptionPercent = stats.total > 0 
-    ? ((stats.absorbed / stats.total) * 100).toFixed(1)
-    : '0.0';
-  const scatterPercent = stats.total > 0 
-    ? ((stats.scatteredOut / stats.total) * 100).toFixed(1)
-    : '0.0';
+  const pct = (n: number) => stats.total > 0 ? ((n / stats.total) * 100).toFixed(0) : '0';
 
   return (
-    <div className="bg-gray-800/90 backdrop-blur-sm rounded-xl p-4 space-y-4 text-white">
-      <div className="flex items-center justify-between border-b border-gray-700 pb-3">
-        <h2 className="text-lg font-semibold">Optical Properties</h2>
-        <div className="flex gap-2">
-          <button
-            onClick={() => setViewMode(viewMode === '3d' ? '2d' : '3d')}
-            className="px-3 py-1.5 text-sm font-medium bg-gray-700 hover:bg-gray-600 rounded-lg transition-colors"
-          >
-            {viewMode === '3d' ? '2D View' : '3D View'}
-          </button>
-        </div>
+    <div className="bg-white/95 backdrop-blur-sm rounded-lg shadow-lg border border-gray-200 p-3 w-56 text-sm">
+      <div className="flex items-center justify-between mb-2 pb-2 border-b border-gray-100">
+        <span className="font-medium text-gray-700 text-xs uppercase tracking-wide">Controls</span>
+        <button
+          onClick={() => setViewMode(viewMode === '3d' ? '2d' : '3d')}
+          className="px-2 py-0.5 text-xs bg-gray-100 hover:bg-gray-200 rounded transition-colors text-gray-600"
+        >
+          {viewMode.toUpperCase()}
+        </button>
       </div>
 
-      <div className="space-y-4">
+      <div className="space-y-2.5">
         <Slider
-          label="Absorption Coefficient (μₐ)"
+          label="Absorption"
+          symbol="μₐ"
           value={params.absorptionCoef}
-          min={0.01}
-          max={2}
-          step={0.01}
+          min={0.001}
+          max={1}
+          step={0.005}
           unit="mm⁻¹"
           onChange={(v) => updateParam('absorptionCoef', v)}
-          description="How strongly light is absorbed. Higher values mean more energy lost to heat."
         />
-
         <Slider
-          label="Scattering Coefficient (μₛ)"
+          label="Scattering"
+          symbol="μₛ"
           value={params.scatteringCoef}
-          min={0.1}
-          max={50}
-          step={0.1}
+          min={0.5}
+          max={40}
+          step={0.5}
           unit="mm⁻¹"
           onChange={(v) => updateParam('scatteringCoef', v)}
-          description="How often light changes direction. Typical tissue: 10-40 mm⁻¹"
         />
-
         <Slider
-          label="Photon Rate"
-          value={params.photonRate}
-          min={1}
-          max={100}
-          step={1}
-          unit="/sec"
-          onChange={(v) => updateParam('photonRate', v)}
-          description="Number of simulated photons launched per second"
+          label="Anisotropy"
+          symbol="g"
+          value={params.anisotropy}
+          min={0}
+          max={0.98}
+          step={0.02}
+          onChange={(v) => updateParam('anisotropy', v)}
         />
-
         <Slider
-          label="Tissue Thickness"
+          label="Thickness"
           value={params.thickness}
-          min={2}
-          max={20}
+          min={1}
+          max={12}
           step={0.5}
           unit="mm"
           onChange={(v) => updateParam('thickness', v)}
         />
-
         <Slider
-          label="Anisotropy (g)"
-          value={params.anisotropy}
-          min={-0.5}
-          max={0.99}
-          step={0.01}
-          unit=""
-          onChange={(v) => updateParam('anisotropy', v)}
-          description="Scattering direction preference. 0 = isotropic, ~0.9 = forward (typical tissue)"
+          label="Rate"
+          value={params.photonRate}
+          min={5}
+          max={80}
+          step={5}
+          unit="/s"
+          onChange={(v) => updateParam('photonRate', v)}
         />
       </div>
 
-      <div className="border-t border-gray-700 pt-3">
-        <h3 className="text-sm font-semibold mb-2 text-gray-300">Statistics</h3>
-        <div className="grid grid-cols-2 gap-2 text-sm">
-          <div className="bg-gray-700/50 rounded p-2">
-            <div className="text-gray-400">Total Photons</div>
-            <div className="font-mono text-lg">{stats.total}</div>
+      <div className="mt-3 pt-2 border-t border-gray-100">
+        <div className="grid grid-cols-4 gap-1 text-[10px] text-center mb-2">
+          <div className="bg-gray-50 rounded px-1 py-1">
+            <div className="text-gray-400">n</div>
+            <div className="font-mono text-gray-700">{stats.total}</div>
           </div>
-          <div className="bg-green-900/30 rounded p-2">
-            <div className="text-green-400">Transmitted</div>
-            <div className="font-mono text-lg text-green-300">
-              {stats.transmitted} ({transmissionPercent}%)
-            </div>
+          <div className="bg-green-50 rounded px-1 py-1">
+            <div className="text-green-600">T</div>
+            <div className="font-mono text-green-700">{pct(stats.transmitted)}%</div>
           </div>
-          <div className="bg-red-900/30 rounded p-2">
-            <div className="text-red-400">Absorbed</div>
-            <div className="font-mono text-lg text-red-300">
-              {stats.absorbed} ({absorptionPercent}%)
-            </div>
+          <div className="bg-red-50 rounded px-1 py-1">
+            <div className="text-red-500">A</div>
+            <div className="font-mono text-red-600">{pct(stats.absorbed)}%</div>
           </div>
-          <div className="bg-blue-900/30 rounded p-2">
-            <div className="text-blue-400">Scattered Out</div>
-            <div className="font-mono text-lg text-blue-300">
-              {stats.scatteredOut} ({scatterPercent}%)
-            </div>
+          <div className="bg-blue-50 rounded px-1 py-1">
+            <div className="text-blue-500">S</div>
+            <div className="font-mono text-blue-600">{pct(stats.scatteredOut)}%</div>
           </div>
         </div>
-      </div>
 
-      <div className="flex gap-2 pt-2">
-        <button
-          onClick={onToggleRunning}
-          className={`flex-1 py-2 px-4 rounded-lg font-medium transition-colors ${
-            isRunning
-              ? 'bg-yellow-600 hover:bg-yellow-700'
-              : 'bg-green-600 hover:bg-green-700'
-          }`}
-        >
-          {isRunning ? 'Pause' : 'Resume'}
-        </button>
-        <button
-          onClick={onReset}
-          className="flex-1 py-2 px-4 bg-gray-600 hover:bg-gray-500 rounded-lg font-medium transition-colors"
-        >
-          Reset
-        </button>
+        <div className="flex gap-1.5">
+          <button
+            onClick={onToggleRunning}
+            className={`flex-1 py-1 px-2 rounded text-xs font-medium transition-colors ${
+              isRunning
+                ? 'bg-amber-100 hover:bg-amber-200 text-amber-700'
+                : 'bg-emerald-100 hover:bg-emerald-200 text-emerald-700'
+            }`}
+          >
+            {isRunning ? 'Pause' : 'Run'}
+          </button>
+          <button
+            onClick={onReset}
+            className="flex-1 py-1 px-2 bg-gray-100 hover:bg-gray-200 rounded text-xs font-medium text-gray-600 transition-colors"
+          >
+            Reset
+          </button>
+        </div>
       </div>
     </div>
   );

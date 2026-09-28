@@ -13,10 +13,12 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  title: 'Welcome to Optics - Light Absorption and Scattering Demo',
-  description:
-    'Interactive educational demo showing how light absorbs and scatters in tissue-like materials. Explore Beer-Lambert law and Monte Carlo photon transport.',
-  keywords: ['optics', 'physics', 'education', 'absorption', 'scattering', 'tissue optics', 'Beer-Lambert'],
+  title: 'Light Attenuation Demo | opticsdemos',
+  description: 'Interactive Monte Carlo simulation of light absorption and scattering in tissue.',
+  icons: {
+    icon: '/icon.svg',
+    apple: '/icon.svg',
+  },
 };
 
 export default function RootLayout({ children }: LayoutProps<'/'>) {
@@ -25,7 +27,7 @@ export default function RootLayout({ children }: LayoutProps<'/'>) {
       lang="en"
       className={`${geistSans.variable} ${geistMono.variable} h-full antialiased`}
     >
-      <body className="min-h-full flex flex-col bg-gray-900">{children}</body>
+      <body className="h-full bg-slate-100">{children}</body>
     </html>
   );
 }

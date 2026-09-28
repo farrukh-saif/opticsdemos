@@ -13,6 +13,21 @@ const OpticsScene = dynamic(
   { ssr: false }
 );
 
+function OpticsLogo() {
+  return (
+    <svg viewBox="0 0 32 32" className="w-5 h-5" fill="none">
+      <rect width="32" height="32" rx="6" fill="#f1f5f9"/>
+      <circle cx="16" cy="10" r="4" fill="#fbbf24"/>
+      <circle cx="16" cy="10" r="2.5" fill="#fcd34d"/>
+      <path d="M16 14 L16 26" stroke="#64748b" strokeWidth="1.5" strokeLinecap="round"/>
+      <path d="M16 14 L12 22" stroke="#ef4444" strokeWidth="1.2" strokeLinecap="round" opacity="0.8"/>
+      <path d="M16 14 L20 24" stroke="#22c55e" strokeWidth="1.2" strokeLinecap="round" opacity="0.8"/>
+      <path d="M16 14 L10 20" stroke="#3b82f6" strokeWidth="1.2" strokeLinecap="round" opacity="0.7"/>
+      <rect x="8" y="26" width="16" height="2" rx="1" fill="#94a3b8"/>
+    </svg>
+  );
+}
+
 export default function Home() {
   const [params, setParams] = useState<SimulationParams>(DEFAULT_PARAMS);
   const [viewMode, setViewMode] = useState<ViewMode>('3d');
@@ -21,67 +36,44 @@ export default function Home() {
     usePhotonSimulation(params);
 
   return (
-    <div className="min-h-screen bg-gray-900 text-white">
-      <header className="bg-gray-800/80 backdrop-blur-sm border-b border-gray-700 px-4 py-3">
-        <div className="max-w-7xl mx-auto flex items-center justify-between">
-          <div>
-            <h1 className="text-xl font-bold">Welcome to Optics</h1>
-            <p className="text-sm text-gray-400">
-              Interactive light absorption and scattering in tissue
-            </p>
-          </div>
-          <InfoPanel />
-        </div>
-      </header>
+    <div className="h-screen w-screen overflow-hidden bg-slate-100 relative">
+      <OpticsScene
+        photons={photons}
+        thickness={slabDimensions.thickness}
+        slabSize={slabDimensions.width}
+        absorptionCoef={params.absorptionCoef}
+        scatteringCoef={params.scatteringCoef}
+        beamRadius={params.beamRadius}
+        viewMode={viewMode}
+      />
 
-      <main className="p-4 max-w-7xl mx-auto">
-        <div className="grid grid-cols-1 lg:grid-cols-[1fr_320px] gap-4 h-[calc(100vh-120px)]">
-          <div className="relative min-h-[400px] lg:min-h-0">
-            <OpticsScene
-              photons={photons}
-              thickness={slabDimensions.thickness}
-              width={slabDimensions.width}
-              height={slabDimensions.height}
-              absorptionCoef={params.absorptionCoef}
-              scatteringCoef={params.scatteringCoef}
-              viewMode={viewMode}
-            />
-
-            <div className="absolute bottom-4 left-4">
-              <Legend />
-            </div>
-
-            <div className="absolute top-4 left-4 bg-gray-800/80 backdrop-blur-sm rounded-lg px-3 py-1.5 text-sm">
-              <span className="text-gray-400">View: </span>
-              <span className="font-medium">{viewMode === '3d' ? '3D Perspective' : '2D Side View'}</span>
-            </div>
-          </div>
-
-          <div className="space-y-4 overflow-y-auto">
-            <ControlPanel
-              params={params}
-              setParams={setParams}
-              stats={stats}
-              viewMode={viewMode}
-              setViewMode={setViewMode}
-              isRunning={isRunning}
-              onToggleRunning={toggleRunning}
-              onReset={reset}
-            />
-
-            <div className="bg-gray-800/90 backdrop-blur-sm rounded-xl p-4">
-              <h3 className="text-sm font-semibold text-gray-300 mb-2">Quick Tips</h3>
-              <ul className="text-sm text-gray-400 space-y-1.5">
-                <li>• Increase μₐ to see more absorption (red paths)</li>
-                <li>• Increase μₛ to see more scattering (zigzag paths)</li>
-                <li>• Low g values make scattering more random</li>
-                <li>• Drag to rotate in 3D, scroll to zoom</li>
-                <li>• Switch to 2D for a clear side view</li>
-              </ul>
-            </div>
+      <div className="absolute top-3 left-3 flex items-center gap-3">
+        <div className="flex items-center gap-2 bg-white/90 backdrop-blur-sm px-2.5 py-1.5 rounded-lg shadow-sm border border-gray-200">
+          <OpticsLogo />
+          <div className="flex flex-col">
+            <span className="text-[10px] text-gray-400 font-medium tracking-wide">opticsdemos</span>
+            <span className="text-xs font-medium text-gray-700 -mt-0.5">Light Attenuation</span>
           </div>
         </div>
-      </main>
+        <InfoPanel />
+      </div>
+
+      <div className="absolute top-3 right-3">
+        <ControlPanel
+          params={params}
+          setParams={setParams}
+          stats={stats}
+          viewMode={viewMode}
+          setViewMode={setViewMode}
+          isRunning={isRunning}
+          onToggleRunning={toggleRunning}
+          onReset={reset}
+        />
+      </div>
+
+      <div className="absolute bottom-3 left-3">
+        <Legend />
+      </div>
     </div>
   );
 }
