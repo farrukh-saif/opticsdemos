@@ -28,9 +28,9 @@ export type ViewMode = '3d' | '2d';
 
 export const DEFAULT_PARAMS: SimulationParams = {
   absorptionCoef: 0.02,
-  scatteringCoef: 8,
-  photonRate: 40,
-  thickness: 5,
+  scatteringCoef: 1.5,
+  photonRate: 2,
+  thickness: 1.5,
   anisotropy: 0.85,
   beamRadius: 2,
 };

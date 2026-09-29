@@ -1,4 +1,4 @@
-import type { Metadata } from 'next';
+import type { Metadata, Viewport } from 'next';
 import { Geist, Geist_Mono } from 'next/font/google';
 import './globals.css';
 
@@ -21,13 +21,21 @@ export const metadata: Metadata = {
   },
 };
 
+export const viewport: Viewport = {
+  width: 'device-width',
+  initialScale: 1,
+  maximumScale: 1,
+  userScalable: false,
+  viewportFit: 'cover',
+};
+
 export default function RootLayout({ children }: LayoutProps<'/'>) {
   return (
     <html
       lang="en"
-      className={`${geistSans.variable} ${geistMono.variable} h-full antialiased`}
+      className={`${geistSans.variable} ${geistMono.variable} h-full overflow-hidden antialiased`}
     >
-      <body className="h-full bg-slate-100">{children}</body>
+      <body className="h-full overflow-hidden bg-slate-100 overscroll-none">{children}</body>
     </html>
   );
 }

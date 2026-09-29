@@ -1,12 +1,19 @@
 'use client';
 
-import { useMemo } from 'react';
+import { memo, useCallback, useEffect, useMemo, useState, type MutableRefObject } from 'react';
 import { Line } from '@react-three/drei';
+import { useThree } from '@react-three/fiber';
 import * as THREE from 'three';
 import { PhotonPath } from '@/types/optics';
 
+type PathHighlight = 'normal' | 'hovered' | 'dimmed';
+
 interface PhotonPathsProps {
   photons: PhotonPath[];
+  missRef: MutableRefObject<() => void>;
+  interactive?: boolean;
+  onTourHover?: () => void;
+  onTourSelect?: () => void;
 }
 
 function getPathColor(status: PhotonPath['status']): string {
@@ -24,103 +31,274 @@ function getPathColor(status: PhotonPath['status']): string {
   }
 }
 
-interface ArrowProps {
-  start: THREE.Vector3;
-  end: THREE.Vector3;
-  color: string;
-  opacity: number;
+const ARROW_HEIGHT = 0.2;
+const DIM_COLOR = new THREE.Color('#d4dbe3');
+
+function mixPathColor(hex: string, highlight: PathHighlight): string {
+  if (highlight !== 'dimmed') return hex;
+  const color = new THREE.Color(hex);
+  color.lerp(DIM_COLOR, 0.82);
+  return `#${color.getHexString()}`;
 }
 
-function DirectionArrow({ start, end, color, opacity }: ArrowProps) {
-  const arrowSize = 0.35;
-  const dir = new THREE.Vector3().subVectors(end, start).normalize();
-  const mid = new THREE.Vector3().addVectors(start, end).multiplyScalar(0.5);
-  
-  const up = new THREE.Vector3(0, 1, 0);
-  let perp = new THREE.Vector3().crossVectors(dir, up).normalize();
-  if (perp.length() < 0.1) {
-    perp = new THREE.Vector3().crossVectors(dir, new THREE.Vector3(1, 0, 0)).normalize();
-  }
-  perp.multiplyScalar(arrowSize * 0.4);
-  
-  const back = dir.clone().multiplyScalar(-arrowSize * 0.8);
-  
-  const tip = mid.clone();
-  const left = mid.clone().add(back).add(perp);
-  const right = mid.clone().add(back).sub(perp);
+function DirectionArrow({
+  position,
+  direction,
+  color,
+  highlight,
+}: {
+  position: THREE.Vector3;
+  direction: THREE.Vector3;
+  color: string;
+  highlight: PathHighlight;
+}) {
+  const { placed, quaternion } = useMemo(() => {
+    const dir = direction.lengthSq() > 1e-8 ? direction.clone().normalize() : new THREE.Vector3(0, -1, 0);
+    const quaternion = new THREE.Quaternion().setFromUnitVectors(
+      new THREE.Vector3(0, 1, 0),
+      dir
+    );
+    const placed = position.clone().addScaledVector(dir, ARROW_HEIGHT * 0.5);
+    return { placed, quaternion };
+  }, [position, direction]);
+
+  const scale = highlight === 'hovered' ? 1.45 : highlight === 'dimmed' ? 0.72 : 1;
 
   return (
-    <Line
-      points={[left, tip, right]}
-      color={color}
-      lineWidth={2}
-      transparent
-      opacity={Math.min(1, opacity * 1.2)}
-    />
+    <mesh
+      position={placed}
+      quaternion={quaternion}
+      scale={scale}
+      frustumCulled={false}
+      renderOrder={highlight === 'hovered' ? 8 : 3}
+    >
+      <coneGeometry args={[0.06, ARROW_HEIGHT, 10]} />
+      <meshBasicMaterial
+        color={color}
+        toneMapped={false}
+        depthTest
+        depthWrite
+      />
+    </mesh>
   );
 }
 
-function PhotonPathLine({ photon, showArrows }: { photon: PhotonPath; showArrows: boolean }) {
+function pointAlongPath(
+  segs: { start: THREE.Vector3; end: THREE.Vector3; len: number; s0: number }[],
+  s: number
+) {
+  const last = segs[segs.length - 1];
+  for (const seg of segs) {
+    if (s <= seg.s0 + seg.len) {
+      const t = seg.len > 0 ? (s - seg.s0) / seg.len : 0;
+      return {
+        position: seg.start.clone().lerp(seg.end, Math.min(1, Math.max(0, t))),
+        direction: seg.end.clone().sub(seg.start).normalize(),
+      };
+    }
+  }
+  return {
+    position: last.end.clone(),
+    direction: last.end.clone().sub(last.start).normalize(),
+  };
+}
+
+function samplePathArrows(points: THREE.Vector3[]) {
+  if (points.length < 2) return [];
+
+  const segs: { start: THREE.Vector3; end: THREE.Vector3; len: number; s0: number }[] = [];
+  let total = 0;
+  for (let i = 1; i < points.length; i++) {
+    const len = points[i].distanceTo(points[i - 1]);
+    if (len < 1e-6) continue;
+    segs.push({ start: points[i - 1], end: points[i], len, s0: total });
+    total += len;
+  }
+  if (segs.length === 0 || total < 0.35) return [];
+
+  const skip = segs[0].len;
+  const rest = total - skip;
+  if (rest < 0.25) {
+    return [pointAlongPath(segs, total * 0.7)];
+  }
+
+  const count = rest > 5 ? 3 : rest > 2 ? 2 : 1;
+  const arrows = [];
+  for (let k = 1; k <= count; k++) {
+    arrows.push(pointAlongPath(segs, skip + (rest * k) / (count + 1)));
+  }
+  return arrows;
+}
+
+function PhotonPathLine({
+  photon,
+  showArrows,
+  highlight,
+  interactive,
+  onHover,
+  onUnhover,
+  onSelect,
+}: {
+  photon: PhotonPath;
+  showArrows: boolean;
+  highlight: PathHighlight;
+  interactive: boolean;
+  onHover: (id: string) => void;
+  onUnhover: (id: string) => void;
+  onSelect: (id: string) => void;
+}) {
   const points = useMemo(() => {
     return photon.points.map((p) => new THREE.Vector3(p.x, p.y, p.z));
   }, [photon.points]);
 
-  const age = Date.now() - photon.createdAt;
-  const fadeStart = 2500;
-  const fadeDuration = 1500;
-  const opacity = age < fadeStart ? 0.85 : Math.max(0.15, 0.85 - (age - fadeStart) / fadeDuration * 0.7);
-  const color = getPathColor(photon.status);
-
-  const arrows = useMemo(() => {
-    if (!showArrows || points.length < 4) return [];
-    const result: { start: THREE.Vector3; end: THREE.Vector3 }[] = [];
-    const step = Math.max(3, Math.floor(points.length / 3));
-    for (let i = step; i < points.length; i += step) {
-      result.push({ start: points[i - 1], end: points[i] });
-    }
-    return result;
-  }, [points, showArrows]);
+  const color = mixPathColor(getPathColor(photon.status), highlight);
+  const arrows = useMemo(
+    () => (showArrows || highlight === 'hovered' ? samplePathArrows(points) : []),
+    [points, showArrows, highlight]
+  );
 
   if (points.length < 2) return null;
 
+  const lineWidth = highlight === 'hovered' ? 0.06 : highlight === 'dimmed' ? 0.028 : 0.045;
+
   return (
-    <group>
+    <group
+      onPointerOver={interactive ? (event) => {
+        event.stopPropagation();
+        onHover(photon.id);
+      } : undefined}
+      onPointerOut={interactive ? (event) => {
+        event.stopPropagation();
+        onUnhover(photon.id);
+      } : undefined}
+      onPointerDown={interactive ? (event) => {
+        event.stopPropagation();
+      } : undefined}
+      onClick={interactive ? (event) => {
+        event.stopPropagation();
+        onSelect(photon.id);
+      } : undefined}
+    >
       <Line
         points={points}
         color={color}
-        lineWidth={1.8}
-        transparent
-        opacity={opacity}
+        lineWidth={lineWidth}
+        worldUnits
+        frustumCulled={false}
+        depthTest
+        depthWrite
+        transparent={false}
+        renderOrder={highlight === 'hovered' ? 7 : 2}
+        toneMapped={false}
+        raycast={interactive ? undefined : () => {}}
       />
       {arrows.map((arrow, i) => (
         <DirectionArrow
           key={i}
-          start={arrow.start}
-          end={arrow.end}
+          position={arrow.position}
+          direction={arrow.direction}
           color={color}
-          opacity={opacity}
+          highlight={highlight}
         />
       ))}
     </group>
   );
 }
 
-export function PhotonPaths({ photons }: PhotonPathsProps) {
-  const recentPhotons = useMemo(() => {
-    const now = Date.now();
-    const maxAge = 4000;
-    return photons.filter((p) => now - p.createdAt < maxAge);
-  }, [photons]);
+function arrowsForPhoton(id: string) {
+  let n = 0;
+  for (let i = 0; i < id.length; i++) n += id.charCodeAt(i);
+  return n % 2 === 0;
+}
+
+const MemoPhotonPathLine = memo(PhotonPathLine);
+
+function PathHoverCursor({
+  active,
+  onLeave,
+}: {
+  active: boolean;
+  onLeave: () => void;
+}) {
+  const { gl } = useThree();
+
+  useEffect(() => {
+    const canvas = gl.domElement;
+    canvas.style.cursor = active ? 'pointer' : 'auto';
+    const handleLeave = () => onLeave();
+    canvas.addEventListener('pointerleave', handleLeave);
+    return () => {
+      canvas.style.cursor = '';
+      canvas.removeEventListener('pointerleave', handleLeave);
+    };
+  }, [active, gl, onLeave]);
+
+  return null;
+}
+
+export function PhotonPaths({
+  photons,
+  missRef,
+  interactive = true,
+  onTourHover,
+  onTourSelect,
+}: PhotonPathsProps) {
+  const [hoveredId, setHoveredId] = useState<string | null>(null);
+  const [selectedId, setSelectedId] = useState<string | null>(null);
+
+  const visibleIds = useMemo(
+    () => new Set(photons.map((photon) => photon.id)),
+    [photons]
+  );
+  const activeHoverId = hoveredId && visibleIds.has(hoveredId) ? hoveredId : null;
+  const activeSelectedId = selectedId && visibleIds.has(selectedId) ? selectedId : null;
+  const anyFocus = activeHoverId !== null || activeSelectedId !== null;
+
+  const onHover = useCallback((id: string) => {
+    setHoveredId(id);
+    onTourHover?.();
+  }, [onTourHover]);
+
+  const onUnhover = useCallback((id: string) => {
+    setHoveredId((current) => (current === id ? null : current));
+  }, []);
+
+  const clearHover = useCallback(() => {
+    setHoveredId(null);
+  }, []);
+
+  const onSelect = useCallback((id: string) => {
+    setSelectedId((current) => (current === id ? null : id));
+    onTourSelect?.();
+  }, [onTourSelect]);
+
+  useEffect(() => {
+    missRef.current = () => setSelectedId(null);
+  }, [missRef]);
 
   return (
     <group>
-      {recentPhotons.map((photon, idx) => (
-        <PhotonPathLine 
-          key={photon.id} 
-          photon={photon} 
-          showArrows={idx % 2 === 0}
-        />
-      ))}
+      {interactive ? <PathHoverCursor active={activeHoverId !== null} onLeave={clearHover} /> : null}
+      {photons.map((photon) => {
+        const focused = photon.id === activeHoverId || photon.id === activeSelectedId;
+        const highlight: PathHighlight = focused
+          ? 'hovered'
+          : anyFocus
+            ? 'dimmed'
+            : 'normal';
+        return (
+          <MemoPhotonPathLine
+            key={photon.id}
+            photon={photon}
+            showArrows={arrowsForPhoton(photon.id)}
+            highlight={highlight}
+            interactive={interactive}
+            onHover={onHover}
+            onUnhover={onUnhover}
+            onSelect={onSelect}
+          />
+        );
+      })}
     </group>
   );
 }
@@ -133,56 +311,36 @@ interface BeamSourceProps {
 export function BeamSource({ position, radius }: BeamSourceProps) {
   return (
     <group position={position}>
-      <mesh>
-        <cylinderGeometry args={[radius, radius, 0.2, 32]} />
-        <meshStandardMaterial 
-          color="#ffd54f" 
+      <mesh position={[0, 0.12, 0]} renderOrder={1} raycast={() => { }}>
+        <cylinderGeometry args={[radius * 1.35, radius * 1.35, 0.08, 48]} />
+        <meshStandardMaterial
+          color="#cfd8dc"
+          transparent
+          opacity={0.28}
+          roughness={0.28}
+          metalness={0.05}
+          depthTest
+          depthWrite={false}
+          side={THREE.DoubleSide}
+        />
+      </mesh>
+      <mesh position={[0, 0.06, 0]} raycast={() => { }}>
+        <cylinderGeometry args={[radius, radius, 0.12, 48]} />
+        <meshStandardMaterial
+          color="#ffd54f"
           emissive="#ffb300"
           emissiveIntensity={0.4}
+          depthTest
+          depthWrite
         />
       </mesh>
-      
-      <mesh position={[0, -0.15, 0]}>
-        <cylinderGeometry args={[radius * 0.9, radius * 0.9, 0.08, 32]} />
-        <meshBasicMaterial color="#fff9c4" transparent opacity={0.7} />
-      </mesh>
-
-      <mesh position={[0, 0.15, 0]}>
-        <boxGeometry args={[radius * 2.4, 0.1, radius * 2.4]} />
-        <meshStandardMaterial color="#424242" />
-      </mesh>
-    </group>
-  );
-}
-
-interface DetectorProps {
-  position: [number, number, number];
-  size: number;
-}
-
-export function Detector({ position, size }: DetectorProps) {
-  return (
-    <group position={position}>
-      <mesh>
-        <boxGeometry args={[size, 0.15, size]} />
-        <meshStandardMaterial 
-          color="#2e7d32"
-          roughness={0.3}
+      <mesh position={[0, -0.02, 0]} raycast={() => { }}>
+        <cylinderGeometry args={[radius * 0.9, radius * 0.9, 0.08, 48]} />
+        <meshBasicMaterial
+          color="#fff9c4"
+          depthTest
+          depthWrite
         />
-      </mesh>
-      
-      <mesh position={[0, 0.08, 0]}>
-        <boxGeometry args={[size * 0.92, 0.02, size * 0.92]} />
-        <meshStandardMaterial 
-          color="#81c784"
-          emissive="#4caf50"
-          emissiveIntensity={0.15}
-        />
-      </mesh>
-
-      <mesh position={[0, 0.1, 0]}>
-        <boxGeometry args={[size + 0.1, 0.02, size + 0.1]} />
-        <meshBasicMaterial color="#1b5e20" />
       </mesh>
     </group>
   );

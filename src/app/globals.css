@@ -27,18 +27,18 @@ input[type="range"] {
 
 input[type="range"]::-webkit-slider-runnable-track {
   background: #e2e8f0;
-  height: 4px;
-  border-radius: 2px;
+  height: 6px;
+  border-radius: 3px;
 }
 
 input[type="range"]::-webkit-slider-thumb {
   -webkit-appearance: none;
   appearance: none;
   background: #64748b;
-  height: 12px;
-  width: 12px;
+  height: 16px;
+  width: 16px;
   border-radius: 50%;
-  margin-top: -4px;
+  margin-top: -5px;
   transition: background 0.1s ease;
 }
 
@@ -48,14 +48,14 @@ input[type="range"]::-webkit-slider-thumb:hover {
 
 input[type="range"]::-moz-range-track {
   background: #e2e8f0;
-  height: 4px;
-  border-radius: 2px;
+  height: 6px;
+  border-radius: 3px;
 }
 
 input[type="range"]::-moz-range-thumb {
   background: #64748b;
-  height: 12px;
-  width: 12px;
+  height: 16px;
+  width: 16px;
   border-radius: 50%;
   border: none;
   transition: background 0.1s ease;
@@ -65,6 +65,145 @@ input[type="range"]::-moz-range-thumb:hover {
   background: #475569;
 }
 
+@media (pointer: coarse) {
+  input[type="range"]::-webkit-slider-thumb {
+    height: 22px;
+    width: 22px;
+    margin-top: -8px;
+  }
+
+  input[type="range"]::-moz-range-thumb {
+    height: 22px;
+    width: 22px;
+  }
+}
+
 canvas {
   touch-action: none;
+}
+
+.tour-spotlight {
+  box-shadow: 0 0 0 3px rgba(56, 189, 248, 0.55), 0 8px 24px rgba(15, 23, 42, 0.08);
+  animation: tour-glow 1.6s ease-in-out infinite;
+}
+
+.tour-spotlight-inner {
+  outline: 2px solid rgba(56, 189, 248, 0.7);
+  outline-offset: 4px;
+  border-radius: 8px;
+}
+
+@keyframes tour-glow {
+  0%, 100% { box-shadow: 0 0 0 3px rgba(56, 189, 248, 0.4), 0 8px 24px rgba(15, 23, 42, 0.08); }
+  50% { box-shadow: 0 0 0 6px rgba(56, 189, 248, 0.18), 0 8px 24px rgba(15, 23, 42, 0.08); }
+}
+
+.tour-mouse-drag {
+  animation: tour-drag 1.4s ease-in-out infinite;
+  transform-box: fill-box;
+  transform-origin: center;
+}
+
+.tour-mouse-scroll {
+  animation: tour-idle 1.6s ease-in-out infinite;
+  transform-box: fill-box;
+  transform-origin: center;
+}
+
+.tour-mouse-hover {
+  animation: tour-hover 1.5s ease-in-out infinite;
+  transform-box: fill-box;
+  transform-origin: center;
+}
+
+.tour-mouse-click {
+  animation: tour-click 1.1s ease-in-out infinite;
+  transform-box: fill-box;
+  transform-origin: center;
+}
+
+.tour-scroll-chevrons {
+  animation: tour-chevrons 1.1s ease-in-out infinite;
+}
+
+.tour-path-line {
+  animation: tour-path-pulse 1.5s ease-in-out infinite;
+}
+
+.tour-click-ring {
+  animation: tour-ring 1.1s ease-out infinite;
+  transform-box: fill-box;
+  transform-origin: center;
+}
+
+.tour-pinch-left {
+  animation: tour-pinch-left 1.3s ease-in-out infinite;
+  transform-box: fill-box;
+  transform-origin: center;
+}
+
+.tour-pinch-right {
+  animation: tour-pinch-right 1.3s ease-in-out infinite;
+  transform-box: fill-box;
+  transform-origin: center;
+}
+
+@keyframes tour-pinch-left {
+  0%, 100% { transform: translate(0, 0); }
+  50% { transform: translate(-6px, 0); }
+}
+
+@keyframes tour-pinch-right {
+  0%, 100% { transform: translate(0, 0); }
+  50% { transform: translate(6px, 0); }
+}
+
+@keyframes tour-drag {
+  0%, 100% { transform: translate(-8px, 3px); }
+  50% { transform: translate(10px, -4px); }
+}
+
+@keyframes tour-idle {
+  0%, 100% { transform: translateY(0); }
+  50% { transform: translateY(3px); }
+}
+
+@keyframes tour-hover {
+  0%, 100% { transform: translate(-6px, 4px); }
+  50% { transform: translate(8px, -5px); }
+}
+
+@keyframes tour-click {
+  0%, 70%, 100% { transform: scale(1); }
+  40% { transform: scale(0.88); }
+}
+
+@keyframes tour-chevrons {
+  0%, 100% { opacity: 0.35; }
+  50% { opacity: 1; }
+}
+
+@keyframes tour-path-pulse {
+  0%, 100% { opacity: 0.45; }
+  50% { opacity: 1; }
+}
+
+@keyframes tour-ring {
+  0% { opacity: 0.5; transform: scale(0.45); }
+  70% { opacity: 0; transform: scale(1.5); }
+  100% { opacity: 0; transform: scale(1.5); }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .tour-mouse-drag,
+  .tour-mouse-scroll,
+  .tour-mouse-hover,
+  .tour-mouse-click,
+  .tour-scroll-chevrons,
+  .tour-path-line,
+  .tour-click-ring,
+  .tour-pinch-left,
+  .tour-pinch-right {
+    animation: none;
+  }
 }
