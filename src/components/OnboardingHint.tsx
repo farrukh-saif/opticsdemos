@@ -55,10 +55,10 @@ function Gesture({ step, pinchZoom }: { step: TourStep; pinchZoom: boolean }) {
           </>
         )}
         {step === 'sliders' && (
-          <g className="tour-mouse-drag">
+          <>
             <rect x="8" y="20" width="40" height="4" rx="2" fill="#e2e8f0" />
-            <circle cx="24" cy="22" r="5" fill="#64748b" />
-          </g>
+            <circle cx="16" cy="22" r="5" fill="#64748b" className="tour-slider-thumb" />
+          </>
         )}
         {step === 'pause' && (
           <g>

@@ -65,6 +65,14 @@ input[type="range"]::-moz-range-thumb:hover {
   background: #475569;
 }
 
+input.slider-thumb-only::-webkit-slider-runnable-track {
+  background: transparent;
+}
+
+input.slider-thumb-only::-moz-range-track {
+  background: transparent;
+}
+
 @media (pointer: coarse) {
   input[type="range"]::-webkit-slider-thumb {
     height: 22px;
@@ -84,18 +92,18 @@ canvas {
 
 .tour-spotlight {
   box-shadow: 0 0 0 3px rgba(56, 189, 248, 0.55), 0 8px 24px rgba(15, 23, 42, 0.08);
-  animation: tour-glow 1.6s ease-in-out infinite;
 }
 
 .tour-spotlight-inner {
-  outline: 2px solid rgba(56, 189, 248, 0.7);
+  outline: 2px solid rgba(56, 189, 248, 0.5);
   outline-offset: 4px;
   border-radius: 8px;
 }
 
-@keyframes tour-glow {
-  0%, 100% { box-shadow: 0 0 0 3px rgba(56, 189, 248, 0.4), 0 8px 24px rgba(15, 23, 42, 0.08); }
-  50% { box-shadow: 0 0 0 6px rgba(56, 189, 248, 0.18), 0 8px 24px rgba(15, 23, 42, 0.08); }
+.tour-slider-thumb {
+  animation: tour-slider-thumb 1.4s ease-in-out infinite;
+  transform-box: fill-box;
+  transform-origin: center;
 }
 
 .tour-mouse-drag {
@@ -146,6 +154,11 @@ canvas {
   animation: tour-pinch-right 1.3s ease-in-out infinite;
   transform-box: fill-box;
   transform-origin: center;
+}
+
+@keyframes tour-slider-thumb {
+  0%, 100% { transform: translateX(0); }
+  50% { transform: translateX(22px); }
 }
 
 @keyframes tour-pinch-left {
@@ -203,7 +216,8 @@ canvas {
   .tour-path-line,
   .tour-click-ring,
   .tour-pinch-left,
-  .tour-pinch-right {
+  .tour-pinch-right,
+  .tour-slider-thumb {
     animation: none;
   }
 }

@@ -32,6 +32,22 @@ function OpticsLogo() {
   );
 }
 
+function CreditLink() {
+  return (
+    <span className="text-[11px] text-gray-400">
+      Made by{' '}
+      <a
+        href="https://syedfarrukhsaif.com/?utm_source=opticsdemos&utm_medium=referral&utm_campaign=made_by"
+        target="_blank"
+        rel="noopener"
+        className="underline decoration-gray-300 underline-offset-2 hover:text-gray-500 hover:decoration-gray-400 transition-colors"
+      >
+        Farrukh
+      </a>
+    </span>
+  );
+}
+
 export default function Home() {
   const [params, setParams] = useState<SimulationParams>(DEFAULT_PARAMS);
   const [viewMode, setViewMode] = useState<ViewMode>('3d');
@@ -113,7 +129,8 @@ export default function Home() {
               toggleRunning();
               report('pause');
             }}
-            className={`h-8 px-2.5 rounded-full border shadow-sm text-xs font-medium ${
+            aria-label={isRunning ? 'Pause simulation' : 'Run simulation'}
+            className={`h-8 w-8 rounded-full border shadow-sm flex items-center justify-center ${
               step === 'pause' ? 'tour-spotlight' : ''
             } ${
               isRunning
@@ -121,14 +138,27 @@ export default function Home() {
                 : 'bg-emerald-100 border-emerald-200 text-emerald-800'
             }`}
           >
-            {isRunning ? 'Pause' : 'Run'}
+            {isRunning ? (
+              <svg viewBox="0 0 20 20" className="w-4 h-4" fill="currentColor">
+                <rect x="5" y="4" width="3" height="12" rx="0.5" />
+                <rect x="12" y="4" width="3" height="12" rx="0.5" />
+              </svg>
+            ) : (
+              <svg viewBox="0 0 20 20" className="w-4 h-4" fill="currentColor">
+                <path d="M6 4.5v11a.5.5 0 00.75.43l9-5.5a.5.5 0 000-.86l-9-5.5A.5.5 0 006 4.5z" />
+              </svg>
+            )}
           </button>
           <button
             type="button"
             onClick={reset}
-            className="h-8 px-2.5 rounded-full bg-white/90 hover:bg-white border border-gray-200 shadow-sm text-xs text-gray-600"
+            aria-label="Reset simulation"
+            className="h-8 w-8 rounded-full bg-white/90 hover:bg-white border border-gray-200 shadow-sm flex items-center justify-center text-gray-600"
           >
-            Reset
+            <svg viewBox="0 0 24 24" className="w-4 h-4" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden>
+              <path d="M3 12a9 9 0 1 0 3-6.7" />
+              <polyline points="3 4 3 9 8 9" />
+            </svg>
           </button>
         </div>
       </div>
@@ -166,13 +196,20 @@ export default function Home() {
       ) : null}
 
       <div className="absolute z-20 left-3 right-3 md:right-auto bottom-[max(0.75rem,env(safe-area-inset-bottom))] md:bottom-16 md:left-3 pointer-events-none">
-        <div className="pointer-events-auto">
+        <div className="pointer-events-auto flex flex-col items-end gap-1.5 md:block">
           <StatsPanel
             stats={stats}
             spotlight={step === 'stats'}
             onSelect={() => report('stats')}
           />
+          <div className="md:hidden px-1">
+            <CreditLink />
+          </div>
         </div>
+      </div>
+
+      <div className="hidden md:block absolute z-10 bottom-3 right-3 pointer-events-auto">
+        <CreditLink />
       </div>
     </div>
   );
