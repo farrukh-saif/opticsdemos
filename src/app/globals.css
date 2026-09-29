@@ -84,18 +84,25 @@ canvas {
 
 .tour-spotlight {
   box-shadow: 0 0 0 3px rgba(56, 189, 248, 0.55), 0 8px 24px rgba(15, 23, 42, 0.08);
-  animation: tour-glow 1.6s ease-in-out infinite;
 }
 
 .tour-spotlight-inner {
-  outline: 2px solid rgba(56, 189, 248, 0.7);
+  outline: 2px solid rgba(56, 189, 248, 0.5);
   outline-offset: 4px;
   border-radius: 8px;
 }
 
-@keyframes tour-glow {
-  0%, 100% { box-shadow: 0 0 0 3px rgba(56, 189, 248, 0.4), 0 8px 24px rgba(15, 23, 42, 0.08); }
-  50% { box-shadow: 0 0 0 6px rgba(56, 189, 248, 0.18), 0 8px 24px rgba(15, 23, 42, 0.08); }
+.tour-slider-highlight input[type="range"]::-webkit-slider-thumb {
+  animation: tour-thumb-pulse 1.4s ease-in-out infinite;
+}
+
+.tour-slider-highlight input[type="range"]::-moz-range-thumb {
+  animation: tour-thumb-pulse 1.4s ease-in-out infinite;
+}
+
+@keyframes tour-thumb-pulse {
+  0%, 100% { box-shadow: 0 0 0 3px rgba(56, 189, 248, 0.5); }
+  50% { box-shadow: 0 0 0 6px rgba(56, 189, 248, 0.3); }
 }
 
 .tour-mouse-drag {

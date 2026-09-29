@@ -113,7 +113,8 @@ export default function Home() {
               toggleRunning();
               report('pause');
             }}
-            className={`h-8 px-2.5 rounded-full border shadow-sm text-xs font-medium ${
+            aria-label={isRunning ? 'Pause simulation' : 'Run simulation'}
+            className={`h-8 w-8 rounded-full border shadow-sm flex items-center justify-center ${
               step === 'pause' ? 'tour-spotlight' : ''
             } ${
               isRunning
@@ -121,14 +122,26 @@ export default function Home() {
                 : 'bg-emerald-100 border-emerald-200 text-emerald-800'
             }`}
           >
-            {isRunning ? 'Pause' : 'Run'}
+            {isRunning ? (
+              <svg viewBox="0 0 20 20" className="w-4 h-4" fill="currentColor">
+                <rect x="5" y="4" width="3" height="12" rx="0.5" />
+                <rect x="12" y="4" width="3" height="12" rx="0.5" />
+              </svg>
+            ) : (
+              <svg viewBox="0 0 20 20" className="w-4 h-4" fill="currentColor">
+                <path d="M6 4.5v11a.5.5 0 00.75.43l9-5.5a.5.5 0 000-.86l-9-5.5A.5.5 0 006 4.5z" />
+              </svg>
+            )}
           </button>
           <button
             type="button"
             onClick={reset}
-            className="h-8 px-2.5 rounded-full bg-white/90 hover:bg-white border border-gray-200 shadow-sm text-xs text-gray-600"
+            aria-label="Reset simulation"
+            className="h-8 w-8 rounded-full bg-white/90 hover:bg-white border border-gray-200 shadow-sm flex items-center justify-center text-gray-600"
           >
-            Reset
+            <svg viewBox="0 0 20 20" className="w-4 h-4" fill="currentColor">
+              <path fillRule="evenodd" d="M4 2a1 1 0 011 1v2.1a7 7 0 1111.9 4.9 1 1 0 01-1.8-.8 5 5 0 10-8.5-3.2H9a1 1 0 010 2H4a1 1 0 01-1-1V3a1 1 0 011-1z" clipRule="evenodd" />
+            </svg>
           </button>
         </div>
       </div>
@@ -173,6 +186,20 @@ export default function Home() {
             onSelect={() => report('stats')}
           />
         </div>
+      </div>
+
+      <div className="absolute z-10 bottom-[max(0.5rem,env(safe-area-inset-bottom))] right-3 md:bottom-3 pointer-events-auto">
+        <span className="text-[11px] text-gray-400">
+          Made by{' '}
+          <a
+            href="https://syedfarrukhsaif.com"
+            target="_blank"
+            rel="noopener noreferrer"
+            className="hover:text-gray-500 transition-colors"
+          >
+            Farrukh
+          </a>
+        </span>
       </div>
     </div>
   );

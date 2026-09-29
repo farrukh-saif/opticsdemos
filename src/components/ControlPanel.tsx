@@ -100,8 +100,8 @@ export function ControlPanel({
     <div
       className={
         sheet
-          ? `bg-white rounded-t-2xl shadow-lg border border-gray-200 w-full text-sm max-h-[70dvh] flex flex-col ${tourStep === 'sliders' || tourStep === 'pause' ? 'tour-spotlight' : ''}`
-          : `bg-white/95 backdrop-blur-sm rounded-xl shadow-lg border border-gray-200 w-72 text-sm max-h-[calc(100vh-1.5rem)] flex flex-col ${tourStep === 'sliders' || tourStep === 'pause' ? 'tour-spotlight' : ''}`
+          ? `bg-white rounded-t-2xl shadow-lg border border-gray-200 w-full text-sm max-h-[70dvh] flex flex-col ${tourStep === 'pause' ? 'tour-spotlight' : ''}`
+          : `bg-white/95 backdrop-blur-sm rounded-xl shadow-lg border border-gray-200 w-72 text-sm max-h-[calc(100vh-1.5rem)] flex flex-col ${tourStep === 'pause' ? 'tour-spotlight' : ''}`
       }
     >
       {sheet ? (
@@ -131,7 +131,7 @@ export function ControlPanel({
         </div>
       </div>
 
-      <div className={`px-4 py-2.5 space-y-2 overflow-y-auto min-h-0 flex-1 ${tourStep === 'sliders' ? 'tour-spotlight-inner' : ''}`}>
+      <div className={`px-4 py-2.5 space-y-2 overflow-y-auto min-h-0 flex-1 ${tourStep === 'sliders' ? 'tour-spotlight-inner tour-slider-highlight' : ''}`}>
         <Slider
           label="Absorption"
           symbol="μₐ"
@@ -163,8 +163,9 @@ export function ControlPanel({
             <Slider
               label="Anisotropy"
               symbol="g"
+              hint="0 isotropic · + forward · - back"
               value={params.anisotropy}
-              min={0}
+              min={-0.98}
               max={0.98}
               step={0.02}
               onChange={(v) => {
@@ -219,8 +220,9 @@ export function ControlPanel({
                 <Slider
                   label="Anisotropy"
                   symbol="g"
+                  hint="0 isotropic · + forward · - back"
                   value={params.anisotropy}
-                  min={0}
+                  min={-0.98}
                   max={0.98}
                   step={0.02}
                   onChange={(v) => {
