@@ -32,6 +32,22 @@ function OpticsLogo() {
   );
 }
 
+function CreditLink() {
+  return (
+    <span className="text-[11px] text-gray-400">
+      Made by{' '}
+      <a
+        href="https://syedfarrukhsaif.com/?utm_source=opticsdemos&utm_medium=referral&utm_campaign=made_by"
+        target="_blank"
+        rel="noopener"
+        className="underline decoration-gray-300 underline-offset-2 hover:text-gray-500 hover:decoration-gray-400 transition-colors"
+      >
+        Farrukh
+      </a>
+    </span>
+  );
+}
+
 export default function Home() {
   const [params, setParams] = useState<SimulationParams>(DEFAULT_PARAMS);
   const [viewMode, setViewMode] = useState<ViewMode>('3d');
@@ -139,8 +155,9 @@ export default function Home() {
             aria-label="Reset simulation"
             className="h-8 w-8 rounded-full bg-white/90 hover:bg-white border border-gray-200 shadow-sm flex items-center justify-center text-gray-600"
           >
-            <svg viewBox="0 0 20 20" className="w-4 h-4" fill="currentColor">
-              <path fillRule="evenodd" d="M4 2a1 1 0 011 1v2.1a7 7 0 1111.9 4.9 1 1 0 01-1.8-.8 5 5 0 10-8.5-3.2H9a1 1 0 010 2H4a1 1 0 01-1-1V3a1 1 0 011-1z" clipRule="evenodd" />
+            <svg viewBox="0 0 24 24" className="w-4 h-4" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden>
+              <path d="M3 12a9 9 0 1 0 3-6.7" />
+              <polyline points="3 4 3 9 8 9" />
             </svg>
           </button>
         </div>
@@ -179,27 +196,20 @@ export default function Home() {
       ) : null}
 
       <div className="absolute z-20 left-3 right-3 md:right-auto bottom-[max(0.75rem,env(safe-area-inset-bottom))] md:bottom-16 md:left-3 pointer-events-none">
-        <div className="pointer-events-auto">
+        <div className="pointer-events-auto flex flex-col items-end gap-1.5 md:block">
           <StatsPanel
             stats={stats}
             spotlight={step === 'stats'}
             onSelect={() => report('stats')}
           />
+          <div className="md:hidden px-1">
+            <CreditLink />
+          </div>
         </div>
       </div>
 
-      <div className="absolute z-10 bottom-[max(0.5rem,env(safe-area-inset-bottom))] right-3 md:bottom-3 pointer-events-auto">
-        <span className="text-[11px] text-gray-400">
-          Made by{' '}
-          <a
-            href="https://syedfarrukhsaif.com"
-            target="_blank"
-            rel="noopener noreferrer"
-            className="hover:text-gray-500 transition-colors"
-          >
-            Farrukh
-          </a>
-        </span>
+      <div className="hidden md:block absolute z-10 bottom-3 right-3 pointer-events-auto">
+        <CreditLink />
       </div>
     </div>
   );

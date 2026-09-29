@@ -14,11 +14,26 @@ interface SliderProps {
   max: number;
   step: number;
   unit?: string;
+  markZero?: boolean;
   onChange: (value: number) => void;
 }
 
-function Slider({ label, symbol, hint, value, min, max, step, unit, onChange }: SliderProps) {
+function Slider({
+  label,
+  symbol,
+  hint,
+  value,
+  min,
+  max,
+  step,
+  unit,
+  markZero = false,
+  onChange,
+}: SliderProps) {
   const digits = step < 0.1 ? 2 : step < 1 ? 1 : 0;
+  const zeroAt =
+    markZero && min < 0 && max > 0 ? ((0 - min) / (max - min)) * 100 : null;
+
   return (
     <div className="space-y-1">
       <div className="flex justify-between items-baseline gap-2 text-sm">
@@ -31,15 +46,30 @@ function Slider({ label, symbol, hint, value, min, max, step, unit, onChange }: 
         </span>
       </div>
       {hint ? <p className="text-[11px] text-gray-400 leading-tight">{hint}</p> : null}
-      <input
-        type="range"
-        min={min}
-        max={max}
-        step={step}
-        value={value}
-        onChange={(e) => onChange(parseFloat(e.target.value))}
-        className="w-full h-2 rounded-full cursor-pointer"
-      />
+      <div className="relative flex h-4 items-center">
+        {zeroAt != null ? (
+          <>
+            <span
+              aria-hidden
+              className="pointer-events-none absolute inset-x-0 top-1/2 z-0 h-1.5 -translate-y-1/2 rounded-full bg-slate-200"
+            />
+            <span
+              aria-hidden
+              className="pointer-events-none absolute z-[1] h-2.5 w-px bg-slate-400"
+              style={{ left: `${zeroAt}%`, transform: 'translateX(-50%)' }}
+            />
+          </>
+        ) : null}
+        <input
+          type="range"
+          min={min}
+          max={max}
+          step={step}
+          value={value}
+          onChange={(e) => onChange(parseFloat(e.target.value))}
+          className={`relative z-10 w-full h-2 rounded-full cursor-pointer ${zeroAt != null ? 'slider-thumb-only' : ''}`}
+        />
+      </div>
     </div>
   );
 }
@@ -131,7 +161,7 @@ export function ControlPanel({
         </div>
       </div>
 
-      <div className={`px-4 py-2.5 space-y-2 overflow-y-auto min-h-0 flex-1 ${tourStep === 'sliders' ? 'tour-spotlight-inner tour-slider-highlight' : ''}`}>
+      <div className={`px-4 py-2.5 space-y-2 overflow-y-auto min-h-0 flex-1 ${tourStep === 'sliders' ? 'tour-spotlight-inner' : ''}`}>
         <Slider
           label="Absorption"
           symbol="μₐ"
@@ -163,11 +193,11 @@ export function ControlPanel({
             <Slider
               label="Anisotropy"
               symbol="g"
-              hint="0 isotropic · + forward · - back"
               value={params.anisotropy}
               min={-0.98}
               max={0.98}
               step={0.02}
+              markZero
               onChange={(v) => {
                 updateParam('anisotropy', v);
                 onTourAction?.('sliders');
@@ -189,7 +219,6 @@ export function ControlPanel({
         )}
         <Slider
           label="Photons per second"
-          hint={sheet ? undefined : 'How busy the source is'}
           value={params.photonRate}
           min={1}
           max={40}
@@ -220,11 +249,11 @@ export function ControlPanel({
                 <Slider
                   label="Anisotropy"
                   symbol="g"
-                  hint="0 isotropic · + forward · - back"
                   value={params.anisotropy}
                   min={-0.98}
                   max={0.98}
                   step={0.02}
+                  markZero
                   onChange={(v) => {
                     updateParam('anisotropy', v);
                     onTourAction?.('sliders');
